@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tourist Location Finder</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f7fa;
+    }
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      background-color: #3498db;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .search-row {
+      display: flex;
+      gap: 10px;
+    }
+    input, select, button {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    input {
+      flex-grow: 1;
+    }
+    button {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      min-width: 120px;
+    }
+    button:hover {
+      background-color: #27ae60;
+    }
+    .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .place-card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+    .place-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .place-image {
+      height: 180px;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+    }
+    .place-details {
+      padding: 15px;
+    }
+    .place-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .place-address, .place-category {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .place-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+    .place-buttons button {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+      margin: 0 5px;
+    }
+    .view-map {
+      background-color: #3498db;
+    }
+    .view-map:hover {
+      background-color: #2980b9;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .api-key-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .api-key-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 100%;
+    }
+    .api-key-content h2 {
+      margin-top: 0;
+    }
+    #mapContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-wrapper {
+      position: relative;
+      width: 90%;
+      height: 90%;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #mapClose {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      z-index: 1;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Tourist Location Finder</h1>
+    <p>Discover amazing places around the world using Foursquare's API</p>
+  </div>
+
+  <div class="search-container">
+    <div class="search-row">
+      <input type="text" id="locationInput" placeholder="Enter a location (e.g., Paris, France)" value="Sibiu, Romania">
+      <select id="categorySelect">
+        <option value="">All Categories</option>
+        <option value="16000">Landmarks & Outdoors</option>
+        <option value="13000">Arts & Entertainment</option>
+        <option value="12000">Attractions</option>
+        <option value="10000">Food</option>
+        <option value="11000">Shops</option>
+        <option value="19000">Events</option>
+      </select>
+    </div>
+    <div class="search-row">
+      <input type="number" id="limitInput" placeholder="Number of results" value="9" min="1" max="50">
+      <button id="searchButton">Search</button>
+    </div>
+  </div>
+
+  <div id="errorContainer"></div>
+  <div id="resultsContainer" class="results-container">
+    <div class="loading">Enter a location and press Search to find tourist attractions</div>
+  </div>
+
+  <div id="apiKeyModal" class="api-key-modal">
+    <div class="api-key-content">
+      <h2>Enter Your Foursquare API Key</h2>
+      <p>To use this application, you need a Foursquare Places API key. You can get one by signing up at <a href="https://developer.foursquare.com/" target="_blank">developer.foursquare.com</a>.</p>
+      <input type="text" id="apiKeyInput" placeholder="fsq_..." style="width: 100%; margin: 15px 0;">
+      <button id="saveApiKeyButton" style="width: 100%;">Save API Key</button>
+    </div>
+  </div>
+
+  <div id="mapContainer">
+    <div class="map-wrapper">
+      <div id="mapClose">✕</div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize variables
+      let apiKey = localStorage.getItem('foursquareApiKey');
+      const apiKeyModal = document.getElementById('apiKeyModal');
+      const apiKeyInput = document.getElementById('apiKeyInput');
+      const saveApiKeyButton = document.getElementById('saveApiKeyButton');
+      const locationInput = document.getElementById('locationInput');
+      const categorySelect = document.getElementById('categorySelect');
+      const limitInput = document.getElementById('limitInput');
+      const searchButton = document.getElementById('searchButton');
+      const resultsContainer = document.getElementById('resultsContainer');
+      const errorContainer = document.getElementById('errorContainer');
+      const mapContainer = document.getElementById('mapContainer');
+      const mapClose = document.getElementById('mapClose');
+      
+      // Show API key modal if no key is stored
+      if (!apiKey) {
+        apiKeyModal.style.display = 'flex';
+      }
+      
+      // Save API key to localStorage
+      saveApiKeyButton.addEventListener('click', function() {
+        apiKey = apiKeyInput.value.trim();
+        if (apiKey) {
+          localStorage.setItem('foursquareApiKey', apiKey);
+          apiKeyModal.style.display = 'none';
+        } else {
+          alert('Please enter a valid API key');
+        }
+      });
+      
+      // Fetch places from Foursquare API
+      async function fetchPlaces(location, category, limit) {
+        resultsContainer.innerHTML = '<div class="loading">Searching for places...</div>';
+        errorContainer.innerHTML = '';
+        
+        let endpoint = `https://api.foursquare.com/v3/places/search?near=${encodeURIComponent(location)}&limit=${limit}`;
+        
+        if (category) {
+          endpoint += `&categories=${category}`;
+        }
+        
+        try {
+          const response = await fetch(endpoint, {
+            headers: {
+              'Authorization': apiKey,
+              'Accept': 'application/json'
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch places');
+          }
+          
+          return data.results || [];
+        } catch (error) {
+          errorContainer.innerHTML = `
+            <div class="error">
+              <strong>Error:</strong> ${error.message}
+              ${error.message.includes('authorization') ? 
+                '<p>Your API key may be invalid. Please refresh the page and enter a new key.</p>' : ''}
+            </div>
+          `;
+          resultsContainer.innerHTML = '';
+          return [];
+        }
+      }
+      
+      // Display places in UI
+      function displayPlaces(places) {
+        if (places.length === 0) {
+          resultsContainer.innerHTML = '<div class="loading">No places found. Try a different location or category.</div>';
+          return;
+        }
+        
+        resultsContainer.innerHTML = places.map(place => {
+          const address = place.location?.formatted_address || place.location?.address || 'Address not available';
+          const categories = place.categories?.map(cat => cat.name).join(', ') || 'Category not available';
+          const lat = place.geocodes?.main?.latitude;
+          const lng = place.geocodes?.main?.longitude;
+          
+          return `
+            <div class="place-card" data-lat="${lat}" data-lng="${lng}" data-name="${place.name}">
+              <div class="place-image">
+                ${place.categories && place.categories[0]?.icon ? 
+                  `<img src="${place.categories[0].icon.prefix}88${place.categories[0].icon.suffix}" alt="${categories}">` :
+                  'No Image Available'
+                }
+              </div>
+              <div class="place-details">
+                <div class="place-name">${place.name}</div>
+                <div class="place-category">${categories}</div>
+                <div class="place-address">${address}</div>
+                <div class="place-buttons">
+                  <button class="view-map">View on Map</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        // Add event listeners to map buttons
+        document.querySelectorAll('.view-map').forEach(button => {
+          button.addEventListener('click', function() {
+            const card = this.closest('.place-card');
+            const lat = card.dataset.lat;
+            const lng = card.dataset.lng;
+            const name = card.dataset.name;
+            
+            if (lat && lng) {
+              showMap(lat, lng, name);
+            } else {
+              alert('Map coordinates not available for this location');
+            }
+          });
+        });
+      }
+      
+      // Function to show map
+      function showMap(lat, lng, name) {
+        mapContainer.style.display = 'flex';
+        
+        // Create iframe with Google Maps
+        document.getElementById('map').innerHTML = `
+          <iframe 
+            width="100%" 
+            height="100%" 
+            frameborder="0" 
+            style="border:0" 
+            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAGg-qKFGMCsa_Q2i4CxBt7-eR0R4OXZdA&q=${lat},${lng}&zoom=15" 
+            allowfullscreen>
+          </iframe>
+        `;
+      }
+      
+      // Close map
+      mapClose.addEventListener('click', function() {
+        mapContainer.style.display = 'none';
+      });
+      
+      // Search button click handler
+      searchButton.addEventListener('click', async function() {
+        const location = locationInput.value.trim();
+        const category = categorySelect.value;
+        const limit = limitInput.value || 9;
+        
+        if (!location) {
+          alert('Please enter a location');
+          return;
+        }
+        
+        if (!apiKey) {
+          apiKeyModal.style.display = 'flex';
+          return;
+        }
+        
+        const places = await fetchPlaces(location, category, limit);
+        displayPlaces(places);
+      });
+      
+      // Allow pressing Enter in the location input to trigger search
+      locationInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchButton.click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tourist Location Finder</title>
+  <!-- Leaflet CSS (for OpenStreetMap) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>Tourist Location Finder</h1>
+    <p>Discover amazing places around the world using Foursquare's API</p>
+  </div>
+
+  <div class="settings-container">
+    <button id="settingsButton" class="settings-button">API Settings</button>
+  </div>
+
+  <div class="search-container">
+    <div class="search-row">
+      <input type="text" id="locationInput" placeholder="Enter a location (e.g., Paris, France)" value="Sibiu, Romania">
+      <select id="categorySelect">
+        <option value="">All Categories</option>
+        <option value="16000">Landmarks & Outdoors</option>
+        <option value="13000">Arts & Entertainment</option>
+        <option value="12000">Attractions</option>
+        <option value="10000">Food</option>
+        <option value="11000">Shops</option>
+        <option value="19000">Events</option>
+      </select>
+    </div>
+    <div class="search-row">
+      <input type="number" id="limitInput" placeholder="Number of results" value="9" min="1" max="50">
+      <button id="searchButton">Search</button>
+    </div>
+  </div>
+
+  <div id="errorContainer"></div>
+  <div id="resultsContainer" class="results-container">
+    <div class="loading">Enter a location and press Search to find tourist attractions</div>
+  </div>
+
+  <div id="apiKeyModal" class="api-key-modal">
+    <div class="api-key-content">
+      <h2>Enter Foursquare API Key</h2>
+      <p>To use this application, you need a Foursquare Places API key. You can get one by signing up at <a href="https://developer.foursquare.com/" target="_blank">developer.foursquare.com</a>.</p>
+      <input type="text" id="apiKeyInput" placeholder="fsq_..." style="width: 100%; margin: 15px 0;">
+      <button id="saveApiKeyButton" style="width: 100%;">Save API Key</button>
+    </div>
+  </div>
+
+  <div id="mapContainer">
+    <div class="map-wrapper">
+      <div id="mapClose">✕</div>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS for OpenStreetMap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
